@@ -1,0 +1,39 @@
+import numpy as np
+from PIL import Image
+
+def resize_image_by_average(input_image_path, output_image_path, block_size):
+    # Abre a imagem e converte para escala de cinza
+    img = Image.open(input_image_path).convert('L')
+
+    # Converte a imagem para um array numpy
+    img_array = np.array(img)
+
+    # Verifica as dimensões da imagem
+    height, width = img_array.shape
+
+    # Calcula o novo tamanho da imagem
+    new_height = height // block_size
+    new_width = width // block_size
+
+    # Cria uma nova array para a imagem menor
+    resized_img_array = np.zeros((new_height, new_width), dtype=np.uint8)
+
+    # Calcula a média dos blocos de pixels e armazena na nova imagem
+    for i in range(new_height):
+        for j in range(new_width):
+            block = img_array[i*block_size:(i+1)*block_size, j*block_size:(j+1)*block_size]
+            resized_img_array[i, j] = np.mean(block)
+
+    # Converte a array numpy de volta para uma imagem PIL
+    resized_img = Image.fromarray(resized_img_array)
+
+    # Salva a nova imagem
+    resized_img.save(output_image_path)
+    print(f"Imagem reduzida salva em: {output_image_path}")
+
+# Exemplo de uso
+input_image_path = '/content/igor.png'  # Substitua pelo caminho da sua imagem
+output_image_path = 'saida.png'
+block_size = 8  # Tamanho do bloco de pixels para calcular a média (4 pixels)
+resize_image_by_average(input_image_path, output_image_path, block_size)
+
