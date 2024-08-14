@@ -1,0 +1,55 @@
+# Importar bibliotecas necessárias
+from picamera import PiCamera
+from PIL import Image
+import time
+import os
+import lora_transmission  # Supondo que este seja o módulo que você criou para LoRa
+
+# Função para capturar a imagem
+def capture_image(image_path):
+    camera = PiCamera()
+    camera.resolution = (1024, 768)  # Defina a resolução desejada
+    time.sleep(2)  # Dê tempo para a câmera se ajustar
+    camera.capture(image_path)
+    camera.close()
+    print(f"Imagem capturada e salva em: {image_path}")
+
+# Função para redimensionar/comprimir a imagem
+def process_image(input_image_path, output_image_path, size=(128, 128)):
+    with Image.open(input_image_path) as img:
+        # Redimensionar/comprimir a imagem
+        img = img.resize(size)
+        img.save(output_image_path, optimize=True, quality=85)  # Salvando com compressão
+    print(f"Imagem processada e salva em: {output_image_path}")
+
+# Função para transmitir a imagem via LoRaWAN
+def transmit_image(image_path):
+    # Abrir e ler o arquivo da imagem processada
+    with open(image_path, "rb") as image_file:
+        image_data = image_file.read()
+    
+    # Divida a imagem em pacotes menores se necessário, dependendo do tamanho do pacote LoRa
+    packet_size = 64  # Exemplo: 64 bytes por pacote
+    packets = [image_data[i:i + packet_size] for i in range(0, len(image_data), packet_size)]
+    
+    # Transmitir cada pacote
+    for packet in packets:
+        lora_transmission.send(packet)
+        print("Pacote transmitido")
+
+# Função principal que integra a captura, processamento e transmissão
+def main():
+    input_image = "captured_image.jpg"  # Caminho para salvar a imagem capturada
+    output_image = "processed_image.jpg"  # Caminho para salvar a imagem processada
+
+    # Capturar a imagem
+    capture_image(input_image)
+
+    # Processar a imagem
+    process_image(input_image, output_image)
+
+    # Transmitir a imagem processada
+    transmit_image(output_image)
+
+if __name__ == "__main__":
+    main()
