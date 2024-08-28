@@ -1,20 +1,22 @@
-import picamera
+from picamera2 import Picamera2, Preview
 from time import sleep
 
 def check_camera():
     try:
-        with picamera.PiCamera() as camera:
-            camera.resolution = (640, 480)
-            camera.start_preview()
-            sleep(2)  # Tempo para a câmera inicializar
-            camera.capture('/home/pi/test_image.jpg')
-            camera.stop_preview()
-            print("Câmera detectada e imagem capturada com sucesso.")
-            print("A imagem foi salva em /home/pi/test_image.jpg")
-    except picamera.PiCameraError as e:
-        print(f"Erro ao acessar a câmera: {e}")
+        picam2 = Picamera2()
+        config = picam2.create_still_configuration(main={"size": (640, 480)})
+        picam2.configure(config)
+        
+        picam2.start()
+        sleep(2)  # Tempo para a câmera inicializar
+        picam2.capture_file('/home/pi/test_image.jpg')
+        picam2.stop()
+        
+        print("Câmera detectada e imagem capturada com sucesso.")
+        print("A imagem foi salva em /home/pi/test_image.jpg")
+        
     except Exception as e:
-        print(f"Outro erro ocorreu: {e}")
+        print(f"Erro ao acessar a câmera: {e}")
 
 if __name__ == "__main__":
     check_camera()
