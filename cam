@@ -13,7 +13,7 @@ def check_camera():
         picam2.stop()
         
         print("Câmera detectada e imagem capturada com sucesso.")
-        print("A imagem foi salva em /home/pi/test_image.jpg")
+        print("A imagem foi salva em /home/Imagens/test_image.jpg")
         
     except Exception as e:
         print(f"Erro ao acessar a câmera: {e}")
