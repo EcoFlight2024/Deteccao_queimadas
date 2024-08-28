@@ -4,7 +4,7 @@ from time import sleep
 def check_camera():
     try:
         picam2 = Picamera2()
-        config = picam2.create_still_configuration(main={"size": (640, 480)})
+        config = picam2.create_still_configuration(main={"size": (2560, 1920)})
         picam2.configure(config)
         
         picam2.start()
