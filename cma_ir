@@ -1,0 +1,27 @@
+import time
+import picamera
+
+def check_camera():
+    try:
+        with picamera.PiCamera() as camera:
+            # Configura a resolução da imagem
+            camera.resolution = (2560, 1920)
+            # Ativa o modo de captura infravermelho (se disponível na câmera)
+            camera.exposure_mode = 'night'  # Usar 'night' pode ajudar em condições de pouca luz
+            
+            # Aguardar tempo para a câmera inicializar e ajustar
+            time.sleep(2)
+            
+            # Capturar a imagem
+            camera.capture('/home/pi/Imagens/iguin.jpg')
+            
+            print("Câmera detectada e imagem capturada com sucesso.")
+            print("A imagem foi salva em /home/pi/Imagens/iguin.jpg")
+        
+    except picamera.PiCameraError as e:
+        print(f"Erro ao acessar a câmera: {e}")
+    except Exception as e:
+        print(f"Outro erro ocorreu: {e}")
+
+if __name__ == "__main__":
+    check_camera()
