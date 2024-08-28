@@ -3,13 +3,18 @@ from time import sleep
 
 def check_camera():
     try:
+        # Inicializa a câmera
         picam2 = Picamera2()
+        # Configura a câmera para capturar uma imagem estática com resolução de 640x480
         config = picam2.create_still_configuration(main={"size": (640, 480)})
         picam2.configure(config)
         
+        # Inicia a câmera
         picam2.start()
         sleep(2)  # Tempo para a câmera inicializar
-        picam2.capture_file('/home/pi/test_image.jpg')
+        # Captura a imagem e salva em /home/Imagens/test_image.jpg
+        picam2.capture_file('/home/lprad/Imagens/test.jpg')
+        # Para a câmera
         picam2.stop()
         
         print("Câmera detectada e imagem capturada com sucesso.")
