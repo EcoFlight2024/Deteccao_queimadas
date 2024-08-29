@@ -1,0 +1,71 @@
+import time
+from io import BytesIO
+from PIL import Image
+from pyLoRa import LoRa
+import picamera
+
+# Configuração do LoRa
+lora = LoRa(serial_port="/dev/ttyS0", address=1, frequency=433, tx_power=14, acks=True)
+
+def capture_image():
+    stream = BytesIO()
+    with picamera.PiCamera() as camera:
+        camera.resolution = (640, 480)  # Resolução da imagem
+        camera.capture(stream, format='jpeg')
+    stream.seek(0)
+    return stream.getvalue()  # Retorna a imagem como bytes
+
+def resize_image(image_data, max_width=1000):
+    img = Image.open(BytesIO(image_data))
+    
+    # Calcular nova altura mantendo a proporção
+    width_percent = (max_width / float(img.size[0]))
+    hsize = int((float(img.size[1]) * float(width_percent)))
+    
+    # Redimensionar a imagem usando LANCZOS (anteriormente ANTIALIAS)
+    img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
+    
+    # Salvar a imagem redimensionada em memória
+    output_stream = BytesIO()
+    img.save(output_stream, format='JPEG')
+    return output_stream.getvalue()
+
+def send_image_via_lora(image_data):
+    # Fragmentar a imagem em pacotes menores
+    packet_size = 255  # Tamanho máximo do pacote LoRa
+    num_packets = len(image_data) // packet_size + (1 if len(image_data) % packet_size != 0 else 0)
+    
+    for i in range(num_packets):
+        start = i * packet_size
+        end = start + packet_size
+        packet = image_data[start:end]
+        
+        # Adicionar um cabeçalho ao pacote para rastrear a ordem
+        header = f"{i}/{num_packets}".encode('utf-8')
+        packet = header + packet
+        
+        # Enviar o pacote
+        lora.send(packet)
+        print(f"Pacote {i+1}/{num_packets} enviado.")
+        
+        # Espera para evitar colisões e saturação da rede
+        time.sleep(0.1)
+
+    print("Imagem enviada com sucesso!")
+
+def main_loop(interval=60):
+    while True:
+        # Captura a imagem
+        image_data = capture_image()
+
+        # Redimensiona a imagem, se necessário
+        compressed_image_data = resize_image(image_data, max_width=1000)
+        
+        # Envia a imagem comprimida via LoRa
+        send_image_via_lora(compressed_image_data)
+        
+        # Aguardar até o próximo ciclo
+        time.sleep(interval)
+
+if __name__ == "__main__":
+    main_loop(interval=60)  # Intervalo de 60 segundos
