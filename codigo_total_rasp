@@ -1,11 +1,21 @@
 import time
 from io import BytesIO
 from PIL import Image
-from pyLoRa import LoRa
+from lora import SX127x
 import picamera
 
-# Configuração do LoRa
-lora = LoRa(serial_port="/dev/ttyS0", address=1, frequency=433, tx_power=14, acks=True)
+# Configuração do LoRa com SX1276
+lora = SX127x(
+    spi_bus=0,  # SPI bus, pode variar (0 ou 1 dependendo do Raspberry Pi)
+    spi_cs=0,  # Chip Select (CS), geralmente 0 ou 1, dependendo do pinagem
+    gpio_irq=None,  # Não utilizado no exemplo básico
+    reset_pin=None,  # Se houver um pino de reset, especifique aqui
+    freq=915,  # Frequência em MHz para o módulo SX1276 (915MHz no exemplo)
+    bw=125,  # Largura de banda (kHz)
+    sf=7,  # Fator de espalhamento
+    cr=5,  # Taxa de correção de erro
+    tx_power=14  # Potência de transmissão em dBm
+)
 
 def capture_image():
     stream = BytesIO()
@@ -45,7 +55,7 @@ def send_image_via_lora(image_data):
         packet = header + packet
         
         # Enviar o pacote
-        lora.send(packet)
+        lora.write(packet)
         print(f"Pacote {i+1}/{num_packets} enviado.")
         
         # Espera para evitar colisões e saturação da rede
