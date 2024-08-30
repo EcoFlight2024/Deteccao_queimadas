@@ -13,7 +13,7 @@ lora = SX127x(
     freq=915,  # Frequência em MHz para o módulo SX1276 (915MHz no exemplo)
     bw=125,  # Largura de banda (kHz)
     sf=7,  # Fator de espalhamento
-    cr=5,  # Taxa de correção de erro
+    cr=4/5,  # Taxa de correção de erro
     tx_power=14  # Potência de transmissão em dBm
 )
 #capturar a imagem pelo OV5647
