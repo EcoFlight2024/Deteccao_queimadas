@@ -1,6 +1,6 @@
 import time
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageFilter
 from lora import SX127x
 import picamera
 
@@ -16,7 +16,7 @@ lora = SX127x(
     cr=5,  # Taxa de correção de erro
     tx_power=14  # Potência de transmissão em dBm
 )
-
+#capturar a imagem pelo OV5647
 def capture_image():
     stream = BytesIO()
     with picamera.PiCamera() as camera:
@@ -25,21 +25,36 @@ def capture_image():
     stream.seek(0)
     return stream.getvalue()  # Retorna a imagem como bytes
 
-def resize_image(image_data, max_width=1000):
-    img = Image.open(BytesIO(image_data))
+#compressão e redefinição de imagem
+def resize_image(image_path, output_path, max_width=1000, quality=70, apply_blur=False):
+    if not os.path.exists(image_path):
+        print(f"Erro: O arquivo '{image_path}' não foi encontrado.")
+        return
     
-    # Calcular nova altura mantendo a proporção
-    width_percent = (max_width / float(img.size[0]))
-    hsize = int((float(img.size[1]) * float(width_percent)))
-    
-    # Redimensionar a imagem usando LANCZOS (anteriormente ANTIALIAS)
-    img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
-    
-    # Salvar a imagem redimensionada em memória
-    output_stream = BytesIO()
-    img.save(output_stream, format='JPEG')
-    return output_stream.getvalue()
+    try:
+        # Abrir a imagem
+        img = Image.open(image_path)
+        
+        # Calcular nova altura mantendo a proporção
+        width_percent = (max_width / float(img.size[0]))
+        hsize = int((float(img.size[1]) * float(width_percent)))
+        img = img.resize((max_width, hsize), Image.Resampling.LANCZOS)
+        img = img.convert('L')
+        if apply_blur:
+            img = img.filter(ImageFilter.GaussianBlur(1))
+        img.save(output_path, format='JPEG', quality=quality, optimize=True)
+        print(f"A imagem em escala de cinza foi salva com sucesso em '{output_path}'.")
 
+    except Exception as e:
+        print(f"Ocorreu um erro: {e}")
+
+# Exemplo de uso
+resize_image("queimada.jpg", 
+             "queimada_comp.jpg", 
+             max_width=100,
+             quality=50,  # Reduz a qualidade do JPEG
+             apply_blur=True)  # Aplica desfoque para aumentar a compressão
+#fragimentar e enviar a imagem pelo lora
 def send_image_via_lora(image_data):
     # Fragmentar a imagem em pacotes menores
     packet_size = 255  # Tamanho máximo do pacote LoRa
